@@ -6,7 +6,7 @@ import { login } from "@/lib/auth";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Entrar — Portal do Professor INAPEM" },
+      { title: "Portal do Professor INAPEM" },
       { name: "description", content: "Acesse o Portal do Professor INAPEM com sua matrícula." },
     ],
   }),
