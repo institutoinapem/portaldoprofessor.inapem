@@ -1,4 +1,4 @@
-import logo from "@/assets/inapem-logo.asset.json";
+import logo from "@/assets/inapem-logo.png";
 
 export function Logo({ className = "h-12 w-12" }: { className?: string }) {
   return (

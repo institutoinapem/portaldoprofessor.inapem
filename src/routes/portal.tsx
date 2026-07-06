@@ -4,7 +4,7 @@ import { Logo } from "@/components/Logo";
 import { currentUser, logout, type Teacher } from "@/lib/auth";
 import {
   Video, FileUp, ClipboardList, Radio, LogOut,
-  Play, Square, Circle, Upload, Trash2, Plus, X,
+  Play, Square, Circle, Upload, Trash2, Plus, X, GraduationCap, 
 } from "lucide-react";
 
 export const Route = createFileRoute("/portal")({
@@ -44,6 +44,7 @@ function PortalPage() {
     { id: "arquivos", label: "Arquivos", icon: FileUp },
     { id: "atividades", label: "Atividades", icon: ClipboardList },
     { id: "lives", label: "Lives", icon: Radio },
+    { id: "Turmas", label: "Turmas", icon: GraduationCap}
   ];
 
   return (
