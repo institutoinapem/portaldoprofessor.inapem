@@ -24,7 +24,7 @@ export const Route = createFileRoute("/portal")({
   component: PortalPage,
 });
 
-type Tab = "aulas" | "arquivos" | "atividades" | "lives";
+type Tab = "aulas" | "arquivos" | "atividades" | "lives" | "turmas";
 
 function PortalPage() {
   const navigate = useNavigate();
@@ -44,7 +44,7 @@ function PortalPage() {
     { id: "arquivos", label: "Arquivos", icon: FileUp },
     { id: "atividades", label: "Atividades", icon: ClipboardList },
     { id: "lives", label: "Lives", icon: Radio },
-    { id: "Turmas", label: "Turmas", icon: GraduationCap}
+    { id: "turmas", label: "Turmas", icon: GraduationCap },
   ];
 
   return (
@@ -108,6 +108,7 @@ function PortalPage() {
         {tab === "arquivos" && <ArquivosPanel />}
         {tab === "atividades" && <AtividadesPanel />}
         {tab === "lives" && <LivesPanel />}
+        {tab === "turmas" && <TurmasPanel />}
       </div>
     </div>
   );
@@ -204,66 +205,187 @@ function VideoaulasPanel() {
   );
 }
 
-/* ---------- Arquivos ---------- */
-function ArquivosPanel() {
-  const [files, setFiles] = useState<{ name: string; size: string; url: string }[]>([]);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+/* ---------- Arquivos / Aulas públicas ---------- */
+type PublishedLesson = {
+  id: string;
+  title: string;
+  description: string;
+  category: string;
+  fileName: string;
+  fileUrl: string;
+  uploadedAt: string;
+  createdBy: string;
+};
 
-  function onFiles(list: FileList | null) {
-    if (!list) return;
-    const added = Array.from(list).map((f) => ({
-      name: f.name,
-      size: `${(f.size / 1024).toFixed(1)} KB`,
-      url: URL.createObjectURL(f),
-    }));
-    setFiles((prev) => [...added, ...prev]);
+function ArquivosPanel() {
+  const [lessons, setLessons] = useState<PublishedLesson[]>([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [category, setCategory] = useState("Geral");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [publishing, setPublishing] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+
+  async function loadLessons() {
+    const response = await fetch("/api/lessons");
+    if (response.ok) {
+      setLessons(await response.json());
+    }
+  }
+
+  useEffect(() => {
+    void loadLessons();
+  }, []);
+
+  async function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setFeedback(null);
+
+    if (!selectedFile || !title.trim()) {
+      setFeedback({ type: "error", message: "Informe um título e selecione um arquivo." });
+      return;
+    }
+
+    setPublishing(true);
+
+    const formData = new FormData();
+    formData.append("title", title.trim());
+    formData.append("description", description.trim());
+    formData.append("category", category.trim() || "Geral");
+    formData.append("file", selectedFile);
+
+    const response = await fetch("/api/lessons", { method: "POST", body: formData });
+    const payload = await response.json().catch(() => null);
+
+    if (!response.ok) {
+      setFeedback({ type: "error", message: payload?.error || "Falha ao publicar a aula." });
+      setPublishing(false);
+      return;
+    }
+
+    setLessons((prev) => [payload, ...prev]);
+    setTitle("");
+    setDescription("");
+    setCategory("Geral");
+    setSelectedFile(null);
+    setFeedback({ type: "success", message: "Aula publicada com sucesso e já disponível para o aluno." });
+    setPublishing(false);
   }
 
   return (
     <section className="grid lg:grid-cols-3 gap-6">
       <Card className="lg:col-span-1">
-        <h2 className="font-display text-xl mb-1">Enviar arquivos</h2>
+        <h2 className="font-display text-xl mb-1">Publicar nova aula</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Suba PDFs, imagens ou documentos para compartilhar com a turma.
+          Envie vídeos, PDFs, documentos e materiais para aparecerem automaticamente no portal do aluno.
         </p>
-        <div
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => { e.preventDefault(); onFiles(e.dataTransfer.files); }}
-          onClick={() => inputRef.current?.click()}
-          className="cursor-pointer rounded-md border-2 border-dashed border-border p-8 text-center hover:bg-muted/40 transition"
-        >
-          <Upload className="mx-auto h-8 w-8 text-primary" />
-          <p className="mt-2 text-sm">Clique ou arraste arquivos aqui</p>
-          <input ref={inputRef} type="file" multiple hidden onChange={(e) => onFiles(e.target.files)} />
-        </div>
+
+        <form onSubmit={onSubmit} className="space-y-3">
+          <input
+            required
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="Título da aula"
+            className="w-full h-11 px-3 rounded-md border bg-background outline-none focus:ring-2 focus:ring-ring"
+          />
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Descrição / instruções"
+            rows={3}
+            className="w-full px-3 py-2 rounded-md border bg-background outline-none focus:ring-2 focus:ring-ring"
+          />
+          <input
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="Categoria (ex.: Matemática)"
+            className="w-full h-11 px-3 rounded-md border bg-background outline-none focus:ring-2 focus:ring-ring"
+          />
+          <label className="block rounded-md border border-dashed border-border p-4 text-sm text-muted-foreground">
+            <span className="mb-2 block font-medium text-foreground">Selecionar arquivo</span>
+            <input
+              type="file"
+              required
+              onChange={(e) => setSelectedFile(e.target.files?.[0] ?? null)}
+              className="w-full text-sm"
+            />
+          </label>
+
+          {feedback && (
+            <p className={feedback.type === "error" ? "text-sm text-destructive" : "text-sm text-primary"}>
+              {feedback.message}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={publishing}
+            className="inline-flex items-center justify-center gap-2 h-11 w-full rounded-md bg-primary text-primary-foreground font-medium hover:opacity-90 disabled:opacity-60"
+          >
+            <Upload className="h-4 w-4" /> {publishing ? "Publicando..." : "Publicar aula"}
+          </button>
+        </form>
       </Card>
 
       <Card className="lg:col-span-2">
-        <h2 className="font-display text-xl mb-4">Arquivos enviados</h2>
-        {files.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhum arquivo enviado ainda.</p>
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <div>
+            <h2 className="font-display text-xl">Conteúdo publicado</h2>
+            <p className="text-sm text-muted-foreground">Aulas disponíveis no portal do aluno.</p>
+          </div>
+          <a href="/aluno" target="_blank" rel="noreferrer" className="text-sm font-medium text-primary hover:underline">
+            Abrir portal do aluno
+          </a>
+        </div>
+
+        {lessons.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma aula publicada ainda.</p>
         ) : (
-          <ul className="divide-y">
-            {files.map((f, i) => (
-              <li key={i} className="flex items-center justify-between py-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium truncate">{f.name}</p>
-                  <p className="text-xs text-muted-foreground">{f.size}</p>
+          <ul className="space-y-3">
+            {lessons.map((lesson) => (
+              <li key={lesson.id} className="rounded-md border p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">{lesson.title}</p>
+                    <p className="text-xs text-muted-foreground">{lesson.description}</p>
+                  </div>
+                  <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] uppercase tracking-wide text-muted-foreground">
+                    {lesson.category}
+                  </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <a href={f.url} download={f.name} className="text-xs text-primary hover:underline">Baixar</a>
-                  <button
-                    onClick={() => setFiles((prev) => prev.filter((_, idx) => idx !== i))}
-                    className="p-1.5 rounded-md hover:bg-muted"
-                    aria-label="Remover"
-                  >
-                    <Trash2 className="h-4 w-4 text-muted-foreground" />
-                  </button>
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <span>{lesson.fileName}</span>
+                  <span>{new Date(lesson.uploadedAt).toLocaleString("pt-BR")}</span>
+                </div>
+                <div className="mt-2 flex gap-2">
+                  <a href={lesson.fileUrl} target="_blank" rel="noreferrer" className="text-xs font-medium text-primary hover:underline">
+                    Abrir material
+                  </a>
                 </div>
               </li>
             ))}
           </ul>
         )}
+      </Card>
+    </section>
+  );
+}
+
+function TurmasPanel() {
+  return (
+    <section className="grid gap-6 lg:grid-cols-2">
+      <Card>
+        <h2 className="font-display text-xl mb-2">Turmas e acesso</h2>
+        <p className="text-sm text-muted-foreground">
+          O portal do aluno recebe automaticamente as aulas publicadas aqui. Você pode compartilhar o link do portal com cada turma.
+        </p>
+      </Card>
+      <Card>
+        <h2 className="font-display text-xl mb-2">Link para os alunos</h2>
+        <p className="text-sm text-muted-foreground mb-3">Use esta URL para abrir o portal do aluno.</p>
+        <a href="/aluno" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
+          <Play className="h-4 w-4" /> Acessar portal do aluno
+        </a>
       </Card>
     </section>
   );

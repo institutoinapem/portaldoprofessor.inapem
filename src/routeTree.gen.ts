@@ -9,19 +9,21 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as PortalRouteImport } from './routes/portal'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as CadastroRouteImport } from './routes/cadastro'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AlunoRouteImport } from './routes/aluno'
+import { Route as CadastroRouteImport } from './routes/cadastro'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as PortalRouteImport } from './routes/portal'
+import { Route as ApiLessonsRouteImport } from './routes/api.lessons'
 
-const PortalRoute = PortalRouteImport.update({
-  id: '/portal',
-  path: '/portal',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const AlunoRoute = AlunoRouteImport.update({
+  id: '/aluno',
+  path: '/aluno',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CadastroRoute = CadastroRouteImport.update({
@@ -29,60 +31,86 @@ const CadastroRoute = CadastroRouteImport.update({
   path: '/cadastro',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PortalRoute = PortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLessonsRoute = ApiLessonsRouteImport.update({
+  id: '/api/lessons',
+  path: '/api/lessons',
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/aluno': typeof AlunoRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
+  '/api/lessons': typeof ApiLessonsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/aluno': typeof AlunoRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
+  '/api/lessons': typeof ApiLessonsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/aluno': typeof AlunoRoute
   '/cadastro': typeof CadastroRoute
   '/login': typeof LoginRoute
   '/portal': typeof PortalRoute
+  '/api/lessons': typeof ApiLessonsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/cadastro' | '/login' | '/portal'
+  fullPaths:
+    '/' | '/aluno' | '/cadastro' | '/login' | '/portal' | '/api/lessons'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/cadastro' | '/login' | '/portal'
-  id: '__root__' | '/' | '/cadastro' | '/login' | '/portal'
+  to: '/' | '/aluno' | '/cadastro' | '/login' | '/portal' | '/api/lessons'
+  id:
+    | '__root__'
+    | '/'
+    | '/aluno'
+    | '/cadastro'
+    | '/login'
+    | '/portal'
+    | '/api/lessons'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AlunoRoute: typeof AlunoRoute
   CadastroRoute: typeof CadastroRoute
   LoginRoute: typeof LoginRoute
   PortalRoute: typeof PortalRoute
+  ApiLessonsRoute: typeof ApiLessonsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/portal': {
-      id: '/portal'
-      path: '/portal'
-      fullPath: '/portal'
-      preLoaderRoute: typeof PortalRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/aluno': {
+      id: '/aluno'
+      path: '/aluno'
+      fullPath: '/aluno'
+      preLoaderRoute: typeof AlunoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/cadastro': {
@@ -92,11 +120,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CadastroRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/portal': {
+      id: '/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof PortalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/lessons': {
+      id: '/api/lessons'
+      path: '/api/lessons'
+      fullPath: '/api/lessons'
+      preLoaderRoute: typeof ApiLessonsRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -104,9 +146,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AlunoRoute: AlunoRoute,
   CadastroRoute: CadastroRoute,
   LoginRoute: LoginRoute,
   PortalRoute: PortalRoute,
+  ApiLessonsRoute: ApiLessonsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
